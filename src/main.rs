@@ -24,6 +24,7 @@ struct GameState {
     obstacles: [i32; 2],
     rng: Randomizer,
     dead: bool,
+    score: i32,
 }
 
 const WIDTH: i32 = 600;
@@ -49,6 +50,7 @@ impl GameState {
             obstacles: [WIDTH+100, WIDTH+450],
             rng: Randomizer::new(),
             dead: false,
+            score: 0,
         }
     }
     fn update(&mut self) {
@@ -66,6 +68,7 @@ impl GameState {
         for i in 0..self.obstacles.len() {
             if self.obstacles[i] < self.x {
                 self.obstacles[i] = self.x + WIDTH + (self.rng.read() * 100.0) as i32;
+                self.score += 1;
             }
         }
 
@@ -120,6 +123,7 @@ async fn main() {
 
         state.update();
         if state.dead {
+            println!("Your score was {}.", state.score);
             break;
         }
 
