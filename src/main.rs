@@ -73,7 +73,7 @@ impl GameState {
         }
 
         for i in 0..self.obstacles.len() {
-            if self.y < 20.0 && self.x > self.obstacles[i] - 15 && self.x < self.obstacles[i] + 5 {
+            if self.y < 20.0 && self.x > self.obstacles[i] - 15 && self.x < self.obstacles[i] + 15 {
                 self.dead = true;
             }
         }
@@ -100,8 +100,8 @@ enum FeedbackType {
 async fn main() {
     // Parse arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        panic!("You need to have one argument!");
+    if args.len() != 3 {
+        panic!("You need to have two arguments (feedback type and player name)!");
     }
     let feedback = if args[1] == "visual" {
         FeedbackType::Visual
@@ -112,6 +112,7 @@ async fn main() {
     } else {
         panic!("You need to type either 'visual', 'audible', or 'tactile'.");
     };
+    let _player_name = &args[2];
     // Initialize state
     let mut state = GameState::init();
     let mut next_frame_time = Instant::now() + Duration::from_millis(FRAME_TIME);
