@@ -73,7 +73,7 @@ impl GameState {
         }
 
         for i in 0..self.obstacles.len() {
-            if self.y < 20.0 && self.x > self.obstacles[i] - 5 && self.x < self.obstacles[i] + 5 {
+            if self.y < 20.0 && self.x > self.obstacles[i] - 15 && self.x < self.obstacles[i] + 5 {
                 self.dead = true;
             }
         }
