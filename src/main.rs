@@ -112,7 +112,7 @@ async fn main() {
     } else {
         panic!("You need to type either 'visual', 'audible', or 'tactile'.");
     };
-    let _player_name = &args[2];
+    let _player_name: &str = &args[2];
     // Initialize state
     let mut state = GameState::init();
     let mut next_frame_time = Instant::now() + Duration::from_millis(FRAME_TIME);
