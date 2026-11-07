@@ -5,6 +5,7 @@ use macroquad::{prelude::*, text};
 use std::env;
 use std::time::{Duration, Instant};
 use std::io::Write;
+use serial2::SerialPort;
 
 struct Randomizer(u16);
 
@@ -103,19 +104,21 @@ enum FeedbackType {
     Tactile,
 }
 
-fn deliver_separate_feedback(feedback_type: FeedbackType, sound: &macroquad::audio::Sound) {
+fn deliver_separate_feedback(feedback_type: FeedbackType, sound: &macroquad::audio::Sound, port: &SerialPort) {
     match feedback_type {
         FeedbackType::Audible => {
             macroquad::audio::play_sound_once(sound);
         },
-        FeedbackType::Tactile => {},
+        FeedbackType::Tactile => {
+            port.write_all(format!("{}", 100).as_bytes());
+        },
         FeedbackType::Visual => panic!(
             "The function `deliver_separate_feedback` is only intended for audible or tactile feedback."
         ),
     }
 }
 
-async fn gameplay(player_name: &str, args: &Vec<String>, feedback_type: FeedbackType, save_data: bool, sound: &macroquad::audio::Sound) -> i32 {
+async fn gameplay(player_name: &str, args: &Vec<String>, feedback_type: FeedbackType, save_data: bool, sound: &macroquad::audio::Sound, port: &SerialPort) -> i32 {
     // Initialize state
     let mut next_frame_time = Instant::now() + Duration::from_millis(GAMEPLAY_FRAME_TIME);
     let mut state = GameState::init();
@@ -145,7 +148,7 @@ async fn gameplay(player_name: &str, args: &Vec<String>, feedback_type: Feedback
             if feedback_type == FeedbackType::Visual {
                 clear_background(DARKGREEN);
             } else {
-                deliver_separate_feedback(feedback_type, &sound);
+                deliver_separate_feedback(feedback_type, sound, port);
             }
         }
         draw_text(player_name, 10.0, 30.0, 40.0, WHITE);
@@ -215,8 +218,8 @@ async fn timer(player_name: &str) {
 async fn main() {
     // Parse arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
-        panic!("You need to have two arguments (feedback type and player name)!");
+    if args.len() != 4 {
+        panic!("You need to have three arguments (feedback type, player name, and serial port)!");
     }
     let feedback = if args[1] == "visual" {
         FeedbackType::Visual
@@ -229,6 +232,10 @@ async fn main() {
     };
     let player_name: &str = &args[2];
     let sound = macroquad::audio::load_sound("beep.wav").await.expect("Failed to load beep sound!");
+    let port: SerialPort = SerialPort::open(&args[3], 9600).expect("Failed to open serial port!");
+    std::thread::sleep(Duration::from_millis(500));
+    port.write_all("200\n".as_bytes()).expect("Failed to write to serial port!");
+    port.flush().expect("Failed to flush serial port!");
     // Introduction
     dialogue(player_name, "Welcome to Noah's science fair experiment.").await;
     dialogue(player_name, "You will be playing a very simple endless runner game.").await;
@@ -242,27 +249,27 @@ async fn main() {
     // Rounds
     dialogue(player_name, "You will now begin round 1 (a practice round).").await;
     timer(player_name).await;
-    let score = gameplay(player_name, &args, feedback, false, &sound).await;
+    let score = gameplay(player_name, &args, feedback, false, &sound, &port).await;
     dialogue(player_name, &format!("You jumped over {} obstacles.", score)).await;
 
     dialogue(player_name, "You will now begin round 2 (a test round).").await;
     timer(player_name).await;
-    let score = gameplay(player_name, &args, feedback, true, &sound).await;
+    let score = gameplay(player_name, &args, feedback, true, &sound, &port).await;
     dialogue(player_name, &format!("You jumped over {} obstacles.", score)).await;
 
     dialogue(player_name, "You will now begin round 3 (a practice round).").await;
     timer(player_name).await;
-    let score = gameplay(player_name, &args, feedback, false, &sound).await;
+    let score = gameplay(player_name, &args, feedback, false, &sound, &port).await;
     dialogue(player_name, &format!("You jumped over {} obstacles.", score)).await;
 
     dialogue(player_name, "You will now begin round 4 (a practice round).").await;
     timer(player_name).await;
-    let score = gameplay(player_name, &args, feedback, false, &sound).await;
+    let score = gameplay(player_name, &args, feedback, false, &sound, &port).await;
     dialogue(player_name, &format!("You jumped over {} obstacles.", score)).await;
 
     dialogue(player_name, "You will now begin round 5 (a test round).").await;
     timer(player_name).await;
-    let score = gameplay(player_name, &args, feedback, true, &sound).await;
+    let score = gameplay(player_name, &args, feedback, true, &sound, &port).await;
     dialogue(player_name, &format!("You jumped over {} obstacles.", score)).await;
 
     dialogue(player_name, "Thank you for participating! Now go to the next page.").await;
