@@ -8,15 +8,9 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
-    int value = Serial.parseInt();
-    // Make sure it is clean for the next read
-    if (Serial.available()) {
-      Serial.read(); 
-    }
-    if (value > 0) {
-      analogWrite(PIN, 255);
-      delay(value);
-      analogWrite(PIN, 0);
-    }
+    Serial.read();
+    analogWrite(PIN, 255);
+    delay(200);
+    analogWrite(PIN, 0);
   }
 }

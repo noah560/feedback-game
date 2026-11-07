@@ -110,7 +110,8 @@ fn deliver_separate_feedback(feedback_type: FeedbackType, sound: &macroquad::aud
             macroquad::audio::play_sound_once(sound);
         },
         FeedbackType::Tactile => {
-            port.write_all(format!("{}", 100).as_bytes());
+            port.write_all("\n".as_bytes()).expect("Failed to write to serial port!");
+            port.flush().expect("Failed to flush serial port!");
         },
         FeedbackType::Visual => panic!(
             "The function `deliver_separate_feedback` is only intended for audible or tactile feedback."
@@ -233,8 +234,8 @@ async fn main() {
     let player_name: &str = &args[2];
     let sound = macroquad::audio::load_sound("beep.wav").await.expect("Failed to load beep sound!");
     let port: SerialPort = SerialPort::open(&args[3], 9600).expect("Failed to open serial port!");
-    std::thread::sleep(Duration::from_millis(500));
-    port.write_all("200\n".as_bytes()).expect("Failed to write to serial port!");
+    std::thread::sleep(Duration::from_millis(2000));
+    port.write_all("\n".as_bytes()).expect("Failed to write to serial port!");
     port.flush().expect("Failed to flush serial port!");
     // Introduction
     dialogue(player_name, "Welcome to Noah's science fair experiment.").await;
